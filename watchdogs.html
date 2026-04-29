@@ -12,6 +12,7 @@
         :root {
             --neon-cyan: #00f2ff;
             --neon-pink: #ff00ff;
+            --neon-green: #39ff14;
             --dedsec-red: #ff0033;
             --bg-dark: #020202;
         }
@@ -90,8 +91,7 @@
     <svg style="display:none">
         <defs>
             <filter id="glitch-filter">
-                <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="1" result="noise" />
-                <!-- Scale reduced for smoother distortion -->
+                <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="1" result="noise" />
                 <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" id="displacement-map" xChannelSelector="R" yChannelSelector="G" />
             </filter>
         </defs>
@@ -122,8 +122,8 @@
         <!-- Injected via JS -->
     </svg>
 
-    <!-- Main Logo (Slow Glitch Version) -->
-    <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
+    <!-- Main Logo Wrapper -->
+    <div id="logo-wrapper" class="fixed inset-0 flex items-center justify-center pointer-events-none">
         <div class="glitch-container opacity-60" style="filter: url(#glitch-filter)">
             <svg id="dedsec-logo" width="300" height="300" viewBox="10 10 80 90">
                 
@@ -133,10 +133,10 @@
                 <!-- W Letter -->
                 <path id="logo-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
 
-                <!-- High Frequency Glitch Layers (Static offset used for color separation) -->
-                <g id="glitch-layers" opacity="0.4">
+                <!-- High Frequency Glitch Layers -->
+                <g id="glitch-layers" opacity="0.6">
                     <path id="ghost-cyan-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--neon-cyan)" stroke-width="0.3" />
-                    <path id="ghost-pink-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-pink)" stroke-width="0.3" />
+                    <path id="ghost-green-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-green)" stroke-width="0.3" />
                 </g>
             </svg>
         </div>
@@ -208,49 +208,60 @@
         }
         typeHead();
 
-        // --- 3. Slow Motion Glitch Animation ---
+        // --- 3. Chaotic Glitch Animation ---
         const dispMap = document.getElementById('displacement-map');
-        const logoV = document.getElementById('logo-v');
-        const logoW = document.getElementById('logo-w');
+        const logoWrapper = document.getElementById('logo-wrapper');
+        const ghostV = document.getElementById('ghost-cyan-v');
+        const ghostW = document.getElementById('ghost-green-w');
         
         function glitchLoop() {
             const timeline = anime.timeline({
-                easing: 'easeInOutQuad',
-                complete: () => setTimeout(glitchLoop, anime.random(2000, 5000))
+                easing: 'steps(2)', // Gives a more "digital/broken" feel
+                complete: () => setTimeout(glitchLoop, anime.random(1000, 4000))
             });
 
+            // The "Peak Glitch" Moment
             timeline
             .add({
                 targets: dispMap,
-                scale: [0, 15, 0],
-                duration: 1200
+                scale: [0, 40, 0, 20, 0], // Sudden blur/distortion
+                duration: 400
             })
-            // Color glitch: change main V and W to neon colors during peak distortion
-            .add({
-                targets: [logoV, logoW],
-                stroke: [
-                    { value: '#ff0033', duration: 0 }, // DedSec Red
-                    { value: '#00f2ff', duration: 100 }, // Flash Cyan
-                    { value: '#ff00ff', duration: 100 }, // Flash Pink
-                    { value: '#ff0033', duration: 800 }  // Back to Red
-                ],
-                easing: 'linear',
-                offset: 200
-            })
-            .add({
-                targets: '#ghost-cyan-v, #ghost-pink-w',
-                translateY: () => anime.random(-3, 3),
-                translateX: 0,
-                opacity: [0.4, 0.8, 0.4],
-                duration: 1000,
-                offset: 0
-            })
+            // Blinking & Flashing in Glitch Colours
             .add({
                 targets: '#dedsec-logo',
-                translateY: [0, -1, 1, 0],
-                translateX: 0,
-                skewX: 0,
-                duration: 1500,
+                opacity: [0.6, 0, 0.8, 0, 0.6], // Sudden blinking
+                duration: 300,
+                offset: 0
+            })
+            // Misplacing the Logo (Jumping around screen)
+            .add({
+                targets: logoWrapper,
+                translateX: [
+                    { value: () => anime.random(-100, 100), duration: 50 },
+                    { value: () => anime.random(-200, 200), duration: 50 },
+                    { value: 0, duration: 50 }
+                ],
+                translateY: [
+                    { value: () => anime.random(-50, 50), duration: 50 },
+                    { value: () => anime.random(-100, 100), duration: 50 },
+                    { value: 0, duration: 50 }
+                ],
+                offset: 0
+            })
+            // Neon Green, Cyan, Red Flashes on the Ghosts
+            .add({
+                targets: [ghostV, ghostW],
+                stroke: [
+                    { value: '#00f2ff', duration: 100 }, // Cyan
+                    { value: '#39ff14', duration: 100 }, // Green
+                    { value: '#ff0033', duration: 100 }, // Red
+                    { value: '#00f2ff', duration: 100 }  // Back to Cyan/Green
+                ],
+                opacity: [0.9, 0],
+                translateX: () => anime.random(-20, 20),
+                translateY: () => anime.random(-10, 10),
+                duration: 400,
                 offset: 0
             });
         }
