@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEDSEC // ROUGER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+        
+        :root {
+            --neon-cyan: #00f2ff;
+            --neon-pink: #ff00ff;
+            --dedsec-red: #ff0033;
+            --bg-dark: #020202;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--neon-cyan);
+            font-family: 'IBM Plex Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* CRT/Scanline Overlays */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.15) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04)
+            );
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.6;
+        }
+
+        /* PCB Circuit Styles */
+        .circuit {
+            fill: none;
+            stroke-width: 1.2;
+            stroke-linecap: square;
+            filter: drop-shadow(0 0 3px var(--neon-cyan));
+            opacity: 0.2;
+        }
+
+        .circuit-pink {
+            stroke: var(--neon-pink);
+            filter: drop-shadow(0 0 3px var(--neon-pink));
+        }
+
+        /* Flickering Animation */
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.3; }
+        }
+
+        .flicker {
+            animation: flicker 6s infinite;
+        }
+
+        /* Background Grid */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, #111 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        .glitch-container {
+            position: relative;
+            transform-style: preserve-3d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="bg-grid"></div>
+
+    <!-- SVG Glitch Filter -->
+    <svg style="display:none">
+        <defs>
+            <filter id="glitch-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="1" result="noise" />
+                <!-- Scale reduced for smoother distortion -->
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" id="displacement-map" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Header Stats -->
+    <header class="fixed top-0 left-0 w-full p-6 z-50 flex justify-between items-start pointer-events-none">
+        <div class="bg-black/30 p-3 border-l-2 border-cyan-500/10 backdrop-blur-sm opacity-40">
+            <div class="text-xs font-bold mb-1 flex items-center">
+                <span class="text-white/70 mr-2 lowercase font-normal">rouger :~ $</span>
+                <span id="typewriter-top" class="text-cyan-400/60 lowercase font-light"></span>
+                <span class="w-1.5 h-3.5 bg-cyan-400/40 animate-pulse ml-1"></span>
+            </div>
+            <div class="text-[9px] opacity-20 uppercase tracking-[0.2em] font-light">dedsec_network_override :: active</div>
+        </div>
+        
+        <div class="flicker opacity-30">
+            <svg width="45" height="45" viewBox="0 0 100 100" class="fill-cyan-400">
+                <path d="M50 5 L90 45 L50 85 L10 45 Z" fill="none" stroke="currentColor" stroke-width="1"/>
+                <path d="M50 15 L80 45 L50 75 L20 45 Z" />
+                <rect x="48" y="43" width="4" height="4" fill="white" />
+            </svg>
+        </div>
+    </header>
+
+    <!-- Background PCB Wiring -->
+    <svg id="pcb-layer" class="fixed inset-0 w-full h-full pointer-events-none" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+        <!-- Injected via JS -->
+    </svg>
+
+    <!-- Main Logo (Slow Glitch Version) -->
+    <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
+        <div class="glitch-container opacity-60" style="filter: url(#glitch-filter)">
+            <svg id="dedsec-logo" width="300" height="300" viewBox="10 10 80 90">
+                
+                <!-- V Letter -->
+                <path id="logo-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
+
+                <!-- W Letter -->
+                <path id="logo-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
+
+                <!-- High Frequency Glitch Layers (Static offset used for color separation) -->
+                <g id="glitch-layers" opacity="0.4">
+                    <path id="ghost-cyan-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--neon-cyan)" stroke-width="0.3" />
+                    <path id="ghost-pink-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-pink)" stroke-width="0.3" />
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Bottom Stat Bar -->
+    <footer class="fixed bottom-0 left-0 w-full p-6 z-50 flex justify-between items-end pointer-events-none">
+        <div class="text-[10px] space-y-1 opacity-20 font-light">
+            <div>IP_TRACE: <span class="text-pink-600">failed</span></div>
+            <div>UPLINK: <span class="text-cyan-600">stable</span></div>
+            <div class="text-[8px] opacity-10 uppercase tracking-widest">© dedsec // all rights exposed</div>
+        </div>
+
+        <div class="flicker opacity-15" style="animation-delay: 2s;">
+            <svg width="35" height="35" viewBox="0 0 100 100" class="fill-pink-500">
+                 <path d="M50 10 L90 50 L50 90 L10 50 Z" />
+            </svg>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. PCB Wiring Generation ---
+        const svg = document.getElementById('pcb-layer');
+        function createPCBWiring() {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const isPink = Math.random() > 0.9;
+            const startX = Math.random() * 1000;
+            const startY = Math.random() * 1000;
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute('class', `circuit ${isPink ? 'circuit-pink' : 'stroke-cyan-400'}`);
+            let d = `M ${startX} ${startY}`;
+            let currX = startX;
+            let currY = startY;
+            const segments = 3 + Math.floor(Math.random() * 4);
+            for(let i=0; i < segments; i++) {
+                const horizontal = Math.random() > 0.5;
+                const length = (Math.random() - 0.5) * 250;
+                if(horizontal) { currX += length; d += ` H ${currX}`; }
+                else { currY += length; d += ` V ${currY}`; }
+            }
+            path.setAttribute('d', d);
+            group.appendChild(path);
+            svg.appendChild(group);
+            const pathLen = path.getTotalLength();
+            path.style.strokeDasharray = pathLen;
+            path.style.strokeDashoffset = pathLen;
+            anime({
+                targets: path,
+                strokeDashoffset: [pathLen, 0],
+                duration: 6000 + Math.random() * 4000,
+                easing: 'easeInOutSine',
+                direction: 'alternate', loop: true, delay: Math.random() * 4000
+            });
+        }
+        for(let i=0; i<35; i++) createPCBWiring();
+
+        // --- 2. Header Typewriter ---
+        const headText = "sudo wrench_protocol --execute --bypass-firewall";
+        const headEl = document.getElementById('typewriter-top');
+        let headIdx = 0;
+        function typeHead() {
+            if (headIdx < headText.length) {
+                headEl.textContent += headText.charAt(headIdx);
+                headIdx++;
+                setTimeout(typeHead, 80);
+            } else {
+                setTimeout(() => { headEl.textContent = ""; headIdx = 0; typeHead(); }, 8000);
+            }
+        }
+        typeHead();
+
+        // --- 3. Slow Motion Glitch Animation ---
+        const dispMap = document.getElementById('displacement-map');
+        const logoV = document.getElementById('logo-v');
+        const logoW = document.getElementById('logo-w');
+        
+        function glitchLoop() {
+            const timeline = anime.timeline({
+                easing: 'easeInOutQuad',
+                complete: () => setTimeout(glitchLoop, anime.random(2000, 5000))
+            });
+
+            timeline
+            .add({
+                targets: dispMap,
+                scale: [0, 15, 0],
+                duration: 1200
+            })
+            // Color glitch: change main V and W to neon colors during peak distortion
+            .add({
+                targets: [logoV, logoW],
+                stroke: [
+                    { value: '#ff0033', duration: 0 }, // DedSec Red
+                    { value: '#00f2ff', duration: 100 }, // Flash Cyan
+                    { value: '#ff00ff', duration: 100 }, // Flash Pink
+                    { value: '#ff0033', duration: 800 }  // Back to Red
+                ],
+                easing: 'linear',
+                offset: 200
+            })
+            .add({
+                targets: '#ghost-cyan-v, #ghost-pink-w',
+                translateY: () => anime.random(-3, 3),
+                translateX: 0,
+                opacity: [0.4, 0.8, 0.4],
+                duration: 1000,
+                offset: 0
+            })
+            .add({
+                targets: '#dedsec-logo',
+                translateY: [0, -1, 1, 0],
+                translateX: 0,
+                skewX: 0,
+                duration: 1500,
+                offset: 0
+            });
+        }
+        glitchLoop();
+
+        // --- 4. Interactive Parallax ---
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX / window.innerWidth - 0.5) * 8;
+            const moveY = (e.clientY / window.innerHeight - 0.5) * 8;
+            svg.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            const logo = document.getElementById('dedsec-logo');
+            if(logo) {
+                logo.parentElement.style.transform = `translate(${moveX * -0.2}px, ${moveY * -0.2}px) rotateX(${moveY * 0.1}deg) rotateY(${moveX * -0.1}deg)`;
+            }
+        });
+    </script>
+</body>
+</html>
