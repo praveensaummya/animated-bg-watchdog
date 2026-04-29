@@ -57,6 +57,12 @@
             filter: drop-shadow(0 0 3px var(--neon-pink));
         }
 
+        .solder-point {
+            stroke-width: 1;
+            fill: none;
+            opacity: 0.3;
+        }
+
         /* Flickering Animation */
         @keyframes flicker {
             0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
@@ -162,11 +168,26 @@
         const svg = document.getElementById('pcb-layer');
         function createPCBWiring() {
             const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            const isPink = Math.random() > 0.9;
+            // Adjusted ratio: More pink lines (50/50 instead of 10/90)
+            const isPink = Math.random() > 0.5;
             const startX = Math.random() * 1000;
             const startY = Math.random() * 1000;
+            
+            const colorClass = isPink ? 'circuit-pink' : 'stroke-cyan-400';
+            const strokeColor = isPink ? 'var(--neon-pink)' : 'var(--neon-cyan)';
+
+            // Create start solder point
+            const startCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            startCircle.setAttribute('cx', startX);
+            startCircle.setAttribute('cy', startY);
+            startCircle.setAttribute('r', 2.5);
+            startCircle.setAttribute('class', `solder-point ${colorClass}`);
+            startCircle.setAttribute('stroke', strokeColor);
+            group.appendChild(startCircle);
+            
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute('class', `circuit ${isPink ? 'circuit-pink' : 'stroke-cyan-400'}`);
+            path.setAttribute('class', `circuit ${colorClass}`);
+            
             let d = `M ${startX} ${startY}`;
             let currX = startX;
             let currY = startY;
@@ -179,17 +200,48 @@
             }
             path.setAttribute('d', d);
             group.appendChild(path);
+
+            // Create end solder point
+            const endCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            endCircle.setAttribute('cx', currX);
+            endCircle.setAttribute('cy', currY);
+            endCircle.setAttribute('r', 2.5);
+            endCircle.setAttribute('class', `solder-point ${colorClass}`);
+            endCircle.setAttribute('stroke', strokeColor);
+            group.appendChild(endCircle);
+
             svg.appendChild(group);
+
             const pathLen = path.getTotalLength();
             path.style.strokeDasharray = pathLen;
             path.style.strokeDashoffset = pathLen;
-            anime({
+
+            // Animation for Solder points and Path
+            anime.timeline({
+                loop: true,
+                direction: 'alternate',
+                delay: Math.random() * 4000
+            })
+            .add({
+                targets: startCircle,
+                opacity: [0, 0.4],
+                r: [0, 2.5],
+                duration: 500,
+                easing: 'easeOutQuad'
+            })
+            .add({
                 targets: path,
                 strokeDashoffset: [pathLen, 0],
-                duration: 6000 + Math.random() * 4000,
-                easing: 'easeInOutSine',
-                direction: 'alternate', loop: true, delay: Math.random() * 4000
-            });
+                duration: 4000 + Math.random() * 4000,
+                easing: 'easeInOutSine'
+            }, '-=200')
+            .add({
+                targets: endCircle,
+                opacity: [0, 0.4],
+                r: [0, 2.5],
+                duration: 500,
+                easing: 'easeOutQuad'
+            }, '-=500');
         }
         for(let i=0; i<35; i++) createPCBWiring();
 
@@ -216,25 +268,22 @@
         
         function glitchLoop() {
             const timeline = anime.timeline({
-                easing: 'steps(2)', // Gives a more "digital/broken" feel
+                easing: 'steps(2)', 
                 complete: () => setTimeout(glitchLoop, anime.random(1000, 4000))
             });
 
-            // The "Peak Glitch" Moment
             timeline
             .add({
                 targets: dispMap,
-                scale: [0, 40, 0, 20, 0], // Sudden blur/distortion
+                scale: [0, 40, 0, 20, 0],
                 duration: 400
             })
-            // Blinking & Flashing in Glitch Colours
             .add({
                 targets: '#dedsec-logo',
-                opacity: [0.6, 0, 0.8, 0, 0.6], // Sudden blinking
+                opacity: [0.6, 0, 0.8, 0, 0.6], 
                 duration: 300,
                 offset: 0
             })
-            // Misplacing the Logo (Jumping around screen)
             .add({
                 targets: logoWrapper,
                 translateX: [
@@ -249,14 +298,13 @@
                 ],
                 offset: 0
             })
-            // Neon Green, Cyan, Red Flashes on the Ghosts
             .add({
                 targets: [ghostV, ghostW],
                 stroke: [
-                    { value: '#00f2ff', duration: 100 }, // Cyan
-                    { value: '#39ff14', duration: 100 }, // Green
-                    { value: '#ff0033', duration: 100 }, // Red
-                    { value: '#00f2ff', duration: 100 }  // Back to Cyan/Green
+                    { value: '#00f2ff', duration: 100 }, 
+                    { value: '#39ff14', duration: 100 }, 
+                    { value: '#ff0033', duration: 100 }, 
+                    { value: '#00f2ff', duration: 100 }  
                 ],
                 opacity: [0.9, 0],
                 translateX: () => anime.random(-20, 20),
