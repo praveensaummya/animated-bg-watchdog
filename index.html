@@ -83,9 +83,143 @@
             z-index: -1;
         }
 
-        .glitch-container {
+         .glitch-container {
             position: relative;
             transform-style: preserve-3d;
+        }
+
+        /* Network Nodes */
+        .node {
+            fill: var(--neon-cyan);
+            opacity: 0;
+        }
+
+        .node-pulse {
+            fill: var(--neon-cyan);
+            opacity: 0.3;
+        }
+
+        .connection-line {
+            stroke: var(--neon-cyan);
+            stroke-width: 0.5;
+            opacity: 0;
+        }
+
+        /* Threat Radar */
+        .radar-sweep {
+            position: absolute;
+            border: 2px solid var(--neon-cyan);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes radarPulse {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 0.8;
+                transform: translate(-50%, -50%);
+            }
+            100% {
+                width: 400px;
+                height: 400px;
+                opacity: 0;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .threat-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--dedsec-red);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--dedsec-red);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes threatAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+        }
+
+        /* Encryption Bar */
+        .encryption-bar {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .encryption-block {
+            width: 4px;
+            height: 20px;
+            background: var(--neon-cyan);
+            opacity: 0.3;
+        }
+
+        @keyframes encryptFlash {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Firewall Status */
+        .firewall-status {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--neon-green);
+            opacity: 0.3;
+            z-index: 50;
+            pointer-events: none;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        /* Packet Flow */
+        .packet {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--neon-pink);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes packetFlow {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1);
+            }
         }
     </style>
 </head>
@@ -122,12 +256,13 @@
                 <rect x="48" y="43" width="4" height="4" fill="white" />
             </svg>
         </div>
-    </header>
+     </header>
 
-    <!-- Background PCB Wiring -->
-    <svg id="pcb-layer" class="fixed inset-0 w-full h-full pointer-events-none" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
-        <!-- Injected via JS -->
-    </svg>
+     <!-- Network Nodes Layer -->
+    <svg id="network-layer" class="fixed inset-0 w-full h-full pointer-events-none" style="z-index: 1;"></svg>
+
+    <!-- Threat Radar Layer -->
+    <div id="threat-radar" class="fixed inset-0 pointer-events-none"></div>
 
     <!-- Main Logo Wrapper -->
     <div id="logo-wrapper" class="fixed inset-0 flex items-center justify-center pointer-events-none">
@@ -165,127 +300,7 @@
     </footer>
 
     <script>
-        // --- 1. PCB Wiring Generation ---
-        const svg = document.getElementById('pcb-layer');
-        function createPCBWiring() {
-            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            // Adjusted ratio: More pink lines (50/50 instead of 10/90)
-            const isPink = Math.random() > 0.5;
-            const startX = Math.random() * 1000;
-            const startY = Math.random() * 1000;
-            
-            const colorClass = isPink ? 'circuit-pink' : 'stroke-cyan-400';
-            const strokeColor = isPink ? 'var(--neon-pink)' : 'var(--neon-cyan)';
 
-            // Create start solder point
-            const startCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            startCircle.setAttribute('cx', startX);
-            startCircle.setAttribute('cy', startY);
-            startCircle.setAttribute('r', 2.5);
-            startCircle.setAttribute('class', `solder-point ${colorClass}`);
-            startCircle.setAttribute('stroke', strokeColor);
-            group.appendChild(startCircle);
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute('class', `circuit ${colorClass}`);
-            
-             let d = `M ${startX} ${startY}`;
-            let currX = startX;
-            let currY = startY;
-            const segments = 1 + Math.floor(Math.random() * 2);
-            const segLength = 60 + Math.random() * 80;
-            
-            for(let i=0; i < segments; i++) {
-                const dir = Math.floor(Math.random() * 4);
-                const len = segLength * (0.7 + Math.random() * 0.6);
-                const half = len / 2;
-                const diag = half * 0.7071;
-                
-                switch(dir) {
-                    case 0: // Right then Up (90°)
-                        currX += half;
-                        d += ` H ${currX}`;
-                        currX += diag;
-                        currY -= diag;
-                        d += ` L ${currX} ${currY}`;
-                        currY -= half;
-                        d += ` V ${currY}`;
-                        break;
-                    case 1: // Right then Down (90°)
-                        currX += half;
-                        d += ` H ${currX}`;
-                        currX += diag;
-                        currY += diag;
-                        d += ` L ${currX} ${currY}`;
-                        currY += half;
-                        d += ` V ${currY}`;
-                        break;
-                    case 2: // Up then Right (90°)
-                        currY -= half;
-                        d += ` V ${currY}`;
-                        currX += diag;
-                        currY -= diag;
-                        d += ` L ${currX} ${currY}`;
-                        currX += half;
-                        d += ` H ${currX}`;
-                        break;
-                    case 3: // Up then Left (90°)
-                        currY -= half;
-                        d += ` V ${currY}`;
-                        currX -= diag;
-                        currY -= diag;
-                        d += ` L ${currX} ${currY}`;
-                        currX -= half;
-                        d += ` H ${currX}`;
-                        break;
-                }
-            }
-            path.setAttribute('d', d);
-            group.appendChild(path);
-
-            // Create end solder point
-            const endCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            endCircle.setAttribute('cx', currX);
-            endCircle.setAttribute('cy', currY);
-            endCircle.setAttribute('r', 2.5);
-            endCircle.setAttribute('class', `solder-point ${colorClass}`);
-            endCircle.setAttribute('stroke', strokeColor);
-            group.appendChild(endCircle);
-
-            svg.appendChild(group);
-
-            const pathLen = path.getTotalLength();
-            path.style.strokeDasharray = pathLen;
-            path.style.strokeDashoffset = pathLen;
-
-            // Animation for Solder points and Path
-            anime.timeline({
-                loop: true,
-                direction: 'alternate',
-                delay: Math.random() * 8000
-            })
-            .add({
-                targets: startCircle,
-                opacity: [0, 0.3],
-                r: [0, 2.5],
-                duration: 1500,
-                easing: 'easeOutQuad'
-            })
-            .add({
-                targets: path,
-                strokeDashoffset: [pathLen, 0],
-                duration: 12000 + Math.random() * 8000,
-                easing: 'easeInOutSine'
-            }, '-=500')
-            .add({
-                targets: endCircle,
-                opacity: [0, 0.3],
-                r: [0, 2.5],
-                duration: 1500,
-                easing: 'easeOutQuad'
-            }, '-=800');
-        }
-         for(let i=0; i<18; i++) createPCBWiring();
 
         // --- 2. Header Typewriter ---
         const headText = "sudo wrench_protocol --execute --bypass-firewall";
@@ -367,13 +382,275 @@
                 offset: 0
             });
         }
-        glitchLoop();
+         glitchLoop();
 
-        // --- 4. Interactive Parallax ---
+        // --- 5. Network Nodes Visualization ---
+        const networkLayer = document.getElementById('network-layer');
+        const nodes = [];
+        const connections = [];
+        
+        function createNetworkNodes() {
+            // Create nodes
+            for (let i = 0; i < 12; i++) {
+                const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                const x = 100 + Math.random() * (window.innerWidth - 200);
+                const y = 100 + Math.random() * (window.innerHeight - 200);
+                const r = 2 + Math.random() * 3;
+                
+                node.setAttribute('cx', x);
+                node.setAttribute('cy', y);
+                node.setAttribute('r', r);
+                node.setAttribute('class', 'node');
+                
+                networkLayer.appendChild(node);
+                nodes.push({ element: node, x, y, r, active: false });
+            }
+            
+            // Create connections between nearby nodes
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 250) {
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', nodes[i].x);
+                        line.setAttribute('y1', nodes[i].y);
+                        line.setAttribute('x2', nodes[j].x);
+                        line.setAttribute('y2', nodes[j].y);
+                        line.setAttribute('class', 'connection-line');
+                        line.style.opacity = 0.1 + Math.random() * 0.15;
+                        
+                        networkLayer.appendChild(line);
+                        connections.push({ element: line, from: i, to: j });
+                    }
+                }
+            }
+            
+            // Animate nodes
+            function pulseNodes() {
+                nodes.forEach((node, idx) => {
+                    if (Math.random() > 0.7) {
+                        anime({
+                            targets: node.element,
+                            opacity: [0, 0.8, 0],
+                            r: [node.r, node.r * 2, node.r],
+                            duration: 1500 + Math.random() * 1000,
+                            easing: 'easeInOutSine'
+                        });
+                        
+                        // Pulse connected lines
+                        connections.forEach(conn => {
+                            if (conn.from === idx || conn.to === idx) {
+                                anime({
+                                    targets: conn.element,
+                                    opacity: [0.1, 0.5, 0.1],
+                                    strokeWidth: [0.5, 1.5, 0.5],
+                                    duration: 800,
+                                    easing: 'easeInOutSine'
+                                });
+                            }
+                        });
+                    }
+                });
+                
+                setTimeout(pulseNodes, 2000 + Math.random() * 2000);
+            }
+            
+            pulseNodes();
+        }
+        
+        createNetworkNodes();
+
+        // --- 7. Threat Detection Radar ---
+        const threatRadar = document.getElementById('threat-radar');
+        
+        function createRadarSweep() {
+            const sweep = document.createElement('div');
+            sweep.className = 'radar-sweep';
+            sweep.style.left = '50%';
+            sweep.style.top = '50%';
+            sweep.style.animation = 'radarPulse 4s ease-out infinite';
+            
+            threatRadar.appendChild(sweep);
+            
+            setTimeout(() => {
+                if (sweep.parentNode) {
+                    sweep.parentNode.removeChild(sweep);
+                }
+            }, 4000);
+        }
+        
+        // Create threat dots
+        function createThreatDot() {
+            const dot = document.createElement('div');
+            dot.className = 'threat-dot';
+            dot.style.left = Math.random() * 100 + 'vw';
+            dot.style.top = Math.random() * 100 + 'vh';
+            dot.style.animation = 'threatAppear 3s ease-in-out infinite';
+            dot.style.animationDelay = Math.random() * 2 + 's';
+            
+            threatRadar.appendChild(dot);
+            
+            setTimeout(() => {
+                if (dot.parentNode) {
+                    dot.parentNode.removeChild(dot);
+                }
+            }, 6000);
+        }
+        
+        // Start radar sweeps
+        setInterval(createRadarSweep, 5000);
+        
+        // Create initial threat dots
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => createThreatDot(), i * 1500);
+        }
+        
+        // Continue creating threat dots
+        setInterval(createThreatDot, 8000);
+
+        // --- 8. Encryption Activity Bar ---
+        const encryptionBar = document.createElement('div');
+        encryptionBar.className = 'encryption-bar';
+        
+        for (let i = 0; i < 32; i++) {
+            const block = document.createElement('div');
+            block.className = 'encryption-block';
+            block.style.animation = `encryptFlash 2s ease-in-out infinite`;
+            block.style.animationDelay = (Math.random() * 2) + 's';
+            encryptionBar.appendChild(block);
+        }
+        
+        document.body.appendChild(encryptionBar);
+
+        // --- 9. Firewall Status Indicator ---
+        const firewallStatus = document.createElement('div');
+        firewallStatus.className = 'firewall-status';
+        firewallStatus.innerHTML = 'FIREWALL<br>ACTIVE<br>SECURE<br>CONNECTION';
+        document.body.appendChild(firewallStatus);
+
+        // --- 10. Data Packet Flow ---
+        function createDataPacket() {
+            const packet = document.createElement('div');
+            packet.className = 'packet';
+            packet.style.left = Math.random() * 100 + 'vw';
+            packet.style.top = Math.random() * 100 + 'vh';
+            packet.style.animation = `packetFlow ${2 + Math.random() * 2}s ease-in-out infinite`;
+            packet.style.animationDelay = Math.random() * 2 + 's';
+            
+            document.body.appendChild(packet);
+            
+            setTimeout(() => {
+                if (packet.parentNode) {
+                    packet.parentNode.removeChild(packet);
+                }
+            }, 5000);
+        }
+        
+        // Create initial packets
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => createDataPacket(), i * 500);
+        }
+        
+        // Continue creating packets
+        setInterval(createDataPacket, 3000);
+
+        // --- 11. Breach Alert System ---
+        function triggerBreachAlert() {
+            const alert = document.createElement('div');
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 11px;
+                color: var(--dedsec-red);
+                opacity: 0;
+                z-index: 100;
+                pointer-events: none;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            `;
+            alert.textContent = '>>> Security Breach Detected <<<';
+            document.body.appendChild(alert);
+            
+            anime({
+                targets: alert,
+                opacity: [0, 0.8, 0],
+                translateX: [-20, 0, 0],
+                duration: 3000,
+                easing: 'easeInOutSine',
+                complete: () => {
+                    if (alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }
+            });
+        }
+        
+        // Random breach alerts
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                triggerBreachAlert();
+            }
+        }, 15000);
+
+        // --- 12. System Status Monitor ---
+        function createSystemStatus() {
+            const status = document.createElement('div');
+            status.style.cssText = `
+                position: fixed;
+                bottom: 120px;
+                left: 20px;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 9px;
+                color: var(--neon-cyan);
+                opacity: 0.2;
+                z-index: 50;
+                pointer-events: none;
+                line-height: 1.8;
+            `;
+            status.innerHTML = 
+                'SYSTEM: ONLINE<br>' +
+                'NODES: ' + nodes.length + '<br>' +
+                'CONNS: ' + connections.length + '<br>' +
+                'STATUS: SECURE';
+            document.body.appendChild(status);
+        }
+        
+        createSystemStatus();
+
+        // --- 12. System Status Monitor ---
+        function createSystemStatus() {
+            const status = document.createElement('div');
+            status.style.cssText = `
+                position: fixed;
+                bottom: 120px;
+                left: 20px;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 9px;
+                color: var(--neon-cyan);
+                opacity: 0.2;
+                z-index: 50;
+                pointer-events: none;
+                line-height: 1.8;
+            `;
+            status.innerHTML = 
+                'SYSTEM: ONLINE<br>' +
+                'NODES: ' + nodes.length + '<br>' +
+                'CONNS: ' + connections.length + '<br>' +
+                'STATUS: SECURE';
+            document.body.appendChild(status);
+        }
+        
+        createSystemStatus();
+
+        // --- 13. Interactive Parallax ---
         document.addEventListener('mousemove', (e) => {
             const moveX = (e.clientX / window.innerWidth - 0.5) * 8;
             const moveY = (e.clientY / window.innerHeight - 0.5) * 8;
-            svg.style.transform = `translate(${moveX}px, ${moveY}px)`;
             const logo = document.getElementById('dedsec-logo');
             if(logo) {
                 logo.parentElement.style.transform = `translate(${moveX * -0.2}px, ${moveY * -0.2}px) rotateX(${moveY * 0.1}deg) rotateY(${moveX * -0.1}deg)`;
