@@ -43,13 +43,14 @@
             opacity: 0.6;
         }
 
-        /* PCB Circuit Styles */
+         /* PCB Circuit Styles */
         .circuit {
             fill: none;
             stroke-width: 1.2;
             stroke-linecap: square;
+            stroke-linejoin: miter;
             filter: drop-shadow(0 0 3px var(--neon-cyan));
-            opacity: 0.2;
+            opacity: 0.12;
         }
 
         .circuit-pink {
@@ -60,7 +61,7 @@
         .solder-point {
             stroke-width: 1;
             fill: none;
-            opacity: 0.3;
+            opacity: 0.2;
         }
 
         /* Flickering Animation */
@@ -188,15 +189,56 @@
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute('class', `circuit ${colorClass}`);
             
-            let d = `M ${startX} ${startY}`;
+             let d = `M ${startX} ${startY}`;
             let currX = startX;
             let currY = startY;
-            const segments = 3 + Math.floor(Math.random() * 4);
+            const segments = 1 + Math.floor(Math.random() * 2);
+            const segLength = 60 + Math.random() * 80;
+            
             for(let i=0; i < segments; i++) {
-                const horizontal = Math.random() > 0.5;
-                const length = (Math.random() - 0.5) * 250;
-                if(horizontal) { currX += length; d += ` H ${currX}`; }
-                else { currY += length; d += ` V ${currY}`; }
+                const dir = Math.floor(Math.random() * 4);
+                const len = segLength * (0.7 + Math.random() * 0.6);
+                const half = len / 2;
+                const diag = half * 0.7071;
+                
+                switch(dir) {
+                    case 0: // Right then Up (90°)
+                        currX += half;
+                        d += ` H ${currX}`;
+                        currX += diag;
+                        currY -= diag;
+                        d += ` L ${currX} ${currY}`;
+                        currY -= half;
+                        d += ` V ${currY}`;
+                        break;
+                    case 1: // Right then Down (90°)
+                        currX += half;
+                        d += ` H ${currX}`;
+                        currX += diag;
+                        currY += diag;
+                        d += ` L ${currX} ${currY}`;
+                        currY += half;
+                        d += ` V ${currY}`;
+                        break;
+                    case 2: // Up then Right (90°)
+                        currY -= half;
+                        d += ` V ${currY}`;
+                        currX += diag;
+                        currY -= diag;
+                        d += ` L ${currX} ${currY}`;
+                        currX += half;
+                        d += ` H ${currX}`;
+                        break;
+                    case 3: // Up then Left (90°)
+                        currY -= half;
+                        d += ` V ${currY}`;
+                        currX -= diag;
+                        currY -= diag;
+                        d += ` L ${currX} ${currY}`;
+                        currX -= half;
+                        d += ` H ${currX}`;
+                        break;
+                }
             }
             path.setAttribute('d', d);
             group.appendChild(path);
@@ -220,30 +262,30 @@
             anime.timeline({
                 loop: true,
                 direction: 'alternate',
-                delay: Math.random() * 4000
+                delay: Math.random() * 8000
             })
             .add({
                 targets: startCircle,
-                opacity: [0, 0.4],
+                opacity: [0, 0.3],
                 r: [0, 2.5],
-                duration: 500,
+                duration: 1500,
                 easing: 'easeOutQuad'
             })
             .add({
                 targets: path,
                 strokeDashoffset: [pathLen, 0],
-                duration: 4000 + Math.random() * 4000,
+                duration: 12000 + Math.random() * 8000,
                 easing: 'easeInOutSine'
-            }, '-=200')
+            }, '-=500')
             .add({
                 targets: endCircle,
-                opacity: [0, 0.4],
+                opacity: [0, 0.3],
                 r: [0, 2.5],
-                duration: 500,
+                duration: 1500,
                 easing: 'easeOutQuad'
-            }, '-=500');
+            }, '-=800');
         }
-        for(let i=0; i<35; i++) createPCBWiring();
+         for(let i=0; i<18; i++) createPCBWiring();
 
         // --- 2. Header Typewriter ---
         const headText = "sudo wrench_protocol --execute --bypass-firewall";
