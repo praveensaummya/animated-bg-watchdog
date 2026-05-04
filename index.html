@@ -88,17 +88,39 @@
             transform-style: preserve-3d;
         }
 
-        /* Circulating Lines */
-        .node {
-            fill: var(--neon-cyan);
-            opacity: 0;
-        }
-
-        .connection-line {
-            stroke: var(--neon-cyan);
-            stroke-width: 0.5;
-            opacity: 0;
-        }
+         /* Network Nodes - Background Layer */
+         .network-nodes-bg {
+             position: fixed;
+             inset: 0;
+             width: 100%;
+             height: 100%;
+             z-index: 0;
+             pointer-events: none;
+         }
+         
+         .node {
+             fill: var(--neon-cyan);
+             opacity: 0.15;
+         }
+         
+         .connection-line {
+             stroke: var(--neon-cyan);
+             stroke-width: 0.5;
+             opacity: 0.05;
+         }
+         
+         /* Logo - Foreground Layer */
+         .logo-foreground {
+             position: fixed;
+             inset: 0;
+             width: 100%;
+             height: 100%;
+             z-index: 10;
+             pointer-events: none;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+         }
 
         /* Encryption Bar */
         .encryption-bar {
@@ -173,18 +195,31 @@
     <div class="scanlines"></div>
     <div class="bg-grid"></div>
 
-    <!-- SVG Glitch Filter -->
-    <svg style="display:none">
-        <defs>
-            <filter id="glitch-filter">
-                <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="1" result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" id="displacement-map" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-        </defs>
-    </svg>
+     <!-- Network Nodes Layer - Background -->
+     <svg id="network-layer" class="network-nodes-bg"></svg>
+
+     <!-- Main Logo Wrapper - Foreground -->
+     <div class="logo-foreground">
+         <div class="glitch-container opacity-60" style="filter: url(#glitch-filter)">
+             <svg id="dedsec-logo" width="300" height="300" viewBox="10 10 80 90">
+                
+                 <!-- V Letter - Main Red Logo -->
+                <path id="logo-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
+
+                <!-- W Letter - Main Red Logo -->
+                <path id="logo-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
+
+                <!-- High Frequency Glitch Layers - Calibrated to match V and W -->
+                <g id="glitch-layers" opacity="0.5">
+                    <path id="ghost-cyan-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--neon-cyan)" stroke-width="0.4" opacity="0.6"/>
+                    <path id="ghost-green-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-green)" stroke-width="0.4" opacity="0.6"/>
+                </g>
+            </svg>
+        </div>
+     </div>
 
     <!-- Header Stats -->
-    <header class="fixed top-0 left-0 w-full p-6 z-50 flex justify-between items-start pointer-events-none">
+    <header class="fixed top-0 left-0 w-full p-6 z-20 flex justify-between items-start pointer-events-none">
         <div class="bg-black/30 p-3 border-l-2 border-cyan-500/10 backdrop-blur-sm opacity-40">
             <div class="text-xs font-bold mb-1 flex items-center">
                 <span class="text-white/70 mr-2 lowercase font-normal">rouger :~ $</span>
@@ -201,30 +236,7 @@
                 <rect x="48" y="43" width="4" height="4" fill="white" />
             </svg>
         </div>
-     </header>
-
-      <!-- Network Nodes Layer -->
-    <svg id="network-layer" class="fixed inset-0 w-full h-full pointer-events-none" style="z-index: 1;"></svg>
-
-    <!-- Main Logo Wrapper -->
-    <div id="logo-wrapper" class="fixed inset-0 flex items-center justify-center pointer-events-none">
-        <div class="glitch-container opacity-60" style="filter: url(#glitch-filter)">
-            <svg id="dedsec-logo" width="300" height="300" viewBox="10 10 80 90">
-                
-                 <!-- V Letter - Main Red Logo -->
-                <path id="logo-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
-
-                <!-- W Letter - Main Red Logo -->
-                <path id="logo-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
-
-                <!-- High Frequency Glitch Layers - Calibrated to match V and W -->
-                <g id="glitch-layers" opacity="0.5">
-                    <path id="ghost-cyan-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--neon-cyan)" stroke-width="0.4" opacity="0.6"/>
-                    <path id="ghost-green-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-green)" stroke-width="0.4" opacity="0.6"/>
-                </g>
-            </svg>
-        </div>
-    </div>
+    </header>
 
     <!-- Bottom Stat Bar -->
     <footer class="fixed bottom-0 left-0 w-full p-6 z-50 flex justify-between items-end pointer-events-none">
@@ -245,7 +257,7 @@
 
 
         // --- 2. Header Typewriter ---
-        const headText = "sudo wrench_protocol --execute --bypass-firewall";
+         const headText = "sudo wrench_protocol --execute --bypass-firewall";
         const headEl = document.getElementById('typewriter-top');
         let headIdx = 0;
         function typeHead() {
@@ -261,13 +273,13 @@
 
          // --- 3. Chaotic Glitch Animation ---
         const dispMap = document.getElementById('displacement-map');
-        const logoWrapper = document.getElementById('logo-wrapper');
+        const logoWrapper = document.querySelector('.logo-foreground');
         const logoV = document.getElementById('logo-v');
         const logoW = document.getElementById('logo-w');
         const ghostV = document.getElementById('ghost-cyan-v');
         const ghostW = document.getElementById('ghost-green-w');
         
-        function glitchLoop() {
+         function glitchLoop() {
             const timeline = anime.timeline({
                 easing: 'steps(2)', 
                 complete: () => setTimeout(glitchLoop, anime.random(2000, 5000))
@@ -324,86 +336,131 @@
                 offset: 0
             });
         }
-         glitchLoop();
+        
+        // Start glitch loop with random initial delay to prevent pattern caching
+        setTimeout(glitchLoop, Math.random() * 1000 + 200);
 
-        // --- 5. Network Nodes Visualization ---
-        const networkLayer = document.getElementById('network-layer');
-        const nodes = [];
-        const connections = [];
-        
-        function createNetworkNodes() {
-            // Create nodes
-            for (let i = 0; i < 12; i++) {
-                const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                const x = 100 + Math.random() * (window.innerWidth - 200);
-                const y = 100 + Math.random() * (window.innerHeight - 200);
-                const r = 2 + Math.random() * 3;
-                
-                node.setAttribute('cx', x);
-                node.setAttribute('cy', y);
-                node.setAttribute('r', r);
-                node.setAttribute('class', 'node');
-                
-                networkLayer.appendChild(node);
-                nodes.push({ element: node, x, y, r, active: false });
-            }
-            
-            // Create connections between nearby nodes
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    const dx = nodes[i].x - nodes[j].x;
-                    const dy = nodes[i].y - nodes[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < 250) {
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', nodes[i].x);
-                        line.setAttribute('y1', nodes[i].y);
-                        line.setAttribute('x2', nodes[j].x);
-                        line.setAttribute('y2', nodes[j].y);
-                        line.setAttribute('class', 'connection-line');
-                        line.style.opacity = 0.1 + Math.random() * 0.15;
-                        
-                        networkLayer.appendChild(line);
-                        connections.push({ element: line, from: i, to: j });
-                    }
-                }
-            }
-            
-            // Animate nodes
-            function pulseNodes() {
-                nodes.forEach((node, idx) => {
-                    if (Math.random() > 0.7) {
-                        anime({
-                            targets: node.element,
-                            opacity: [0, 0.8, 0],
-                            r: [node.r, node.r * 2, node.r],
-                            duration: 1500 + Math.random() * 1000,
-                            easing: 'easeInOutSine'
-                        });
-                        
-                        // Pulse connected lines
-                        connections.forEach(conn => {
-                            if (conn.from === idx || conn.to === idx) {
-                                anime({
-                                    targets: conn.element,
-                                    opacity: [0.1, 0.5, 0.1],
-                                    strokeWidth: [0.5, 1.5, 0.5],
-                                    duration: 800,
-                                    easing: 'easeInOutSine'
-                                });
-                            }
-                        });
-                    }
-                });
-                
-                setTimeout(pulseNodes, 2000 + Math.random() * 2000);
-            }
-            
-            pulseNodes();
-        }
-        
-        createNetworkNodes();
+         // --- 5. Network Nodes Visualization ---
+         const networkLayer = document.getElementById('network-layer');
+         const nodes = [];
+         const connections = [];
+         let nodePulseInterval = null;
+         let currentClusterPattern = 0;
+         
+         // Define different cluster patterns
+         const clusterPatterns = [
+             { nodeCount: 8,  connectionDistance: 180, pulseChance: 0.5 },  // Dense cluster
+             { nodeCount: 12, connectionDistance: 250, pulseChance: 0.4 },  // Medium spread
+             { nodeCount: 6,  connectionDistance: 150, pulseChance: 0.6 },  // Tight cluster
+             { nodeCount: 10, connectionDistance: 200, pulseChance: 0.45 }  // Balanced
+         ];
+         
+         function createNetworkNodes(patternIndex) {
+             const pattern = clusterPatterns[patternIndex];
+             
+             // Clear existing nodes and connections first
+             while (networkLayer.firstChild) {
+                 networkLayer.removeChild(networkLayer.firstChild);
+             }
+             nodes.length = 0;
+             connections.length = 0;
+             
+             // Create nodes with fresh random positions
+             for (let i = 0; i < pattern.nodeCount; i++) {
+                 const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                 const x = 100 + Math.random() * (window.innerWidth - 200);
+                 const y = 100 + Math.random() * (window.innerHeight - 200);
+                 const r = 2 + Math.random() * 3;
+                 
+                 node.setAttribute('cx', x);
+                 node.setAttribute('cy', y);
+                 node.setAttribute('r', r);
+                 node.setAttribute('class', 'node');
+                 
+                 networkLayer.appendChild(node);
+                 nodes.push({ element: node, x, y, r, active: false });
+             }
+             
+             // Create connections between nearby nodes
+             for (let i = 0; i < nodes.length; i++) {
+                 for (let j = i + 1; j < nodes.length; j++) {
+                     const dx = nodes[i].x - nodes[j].x;
+                     const dy = nodes[i].y - nodes[j].y;
+                     const dist = Math.sqrt(dx * dx + dy * dy);
+                     
+                     if (dist < pattern.connectionDistance) {
+                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                         line.setAttribute('x1', nodes[i].x);
+                         line.setAttribute('y1', nodes[i].y);
+                         line.setAttribute('x2', nodes[j].x);
+                         line.setAttribute('y2', nodes[j].y);
+                         line.setAttribute('class', 'connection-line');
+                         line.style.opacity = 0.05 + Math.random() * 0.08;
+                         
+                         networkLayer.appendChild(line);
+                         connections.push({ element: line, from: i, to: j });
+                     }
+                 }
+             }
+             
+             // Animate nodes with faster pulsing
+             function pulseNodes() {
+                 nodes.forEach((node, idx) => {
+                     if (Math.random() > pattern.pulseChance) {
+                         anime({
+                             targets: node.element,
+                             opacity: [0.1, 0.6, 0.1],
+                             r: [node.r, node.r * 1.8, node.r],
+                             duration: 800 + Math.random() * 600,
+                             easing: 'easeInOutSine'
+                         });
+                         
+                         // Pulse connected lines
+                         connections.forEach(conn => {
+                             if (conn.from === idx || conn.to === idx) {
+                                 anime({
+                                     targets: conn.element,
+                                     opacity: [0.05, 0.3, 0.05],
+                                     strokeWidth: [0.5, 1.2, 0.5],
+                                     duration: 500,
+                                     easing: 'easeInOutSine'
+                                 });
+                             }
+                         });
+                     }
+                 });
+                 
+                 // Faster pulsing: 1.5 to 3 seconds
+                 nodePulseInterval = setTimeout(pulseNodes, 1500 + Math.random() * 1500);
+             }
+             
+             pulseNodes();
+         }
+         
+         // Cycle through patterns: stay for 3-4 seconds, then faster selection
+         function cycleClusterPattern() {
+             // Select random pattern
+             const newPattern = Math.floor(Math.random() * clusterPatterns.length);
+             currentClusterPattern = newPattern;
+             
+             createNetworkNodes(newPattern);
+             
+             // Stay for 3-4 seconds, then faster selection (1-2 seconds)
+             const stayTime = 3000 + Math.random() * 1000;
+             const nextTime = 1000 + Math.random() * 1000;
+             
+             setTimeout(() => {
+                 cycleClusterPattern();
+             }, stayTime);
+         }
+         
+         // Start with initial pattern
+         createNetworkNodes(0);
+         
+         // Begin cycling after 3-4 seconds
+         setTimeout(() => {
+             cycleClusterPattern();
+         }, 3500);
 
         // --- 7. Threat Detection Radar ---
         const threatRadar = document.getElementById('threat-radar');
@@ -564,13 +621,72 @@
         
          createSystemStatus();
 
-        // --- 13. Interactive Parallax ---
-        document.addEventListener('mousemove', (e) => {
+         // --- 13. Interactive Parallax ---
+         document.addEventListener('mousemove', (e) => {
             const moveX = (e.clientX / window.innerWidth - 0.5) * 8;
             const moveY = (e.clientY / window.innerHeight - 0.5) * 8;
             const logo = document.getElementById('dedsec-logo');
             if(logo) {
                 logo.parentElement.style.transform = `translate(${moveX * -0.2}px, ${moveY * -0.2}px) rotateX(${moveY * 0.1}deg) rotateY(${moveX * -0.1}deg)`;
+            }
+        });
+
+        // --- 14. Force Re-render on Page Load (Fix for Vercel SSR caching) ---
+        function forceReRender() {
+            // Force glitch loop to restart with new random values
+            const logoWrapper = document.querySelector('.logo-foreground');
+            if (logoWrapper) {
+                logoWrapper.style.opacity = '0.59';
+                setTimeout(() => {
+                    logoWrapper.style.opacity = '0.6';
+                }, 50);
+            }
+
+            // Force a glitch effect immediately
+            const dispMap = document.getElementById('displacement-map');
+            if (dispMap) {
+                anime({
+                    targets: dispMap,
+                    scale: [0, 30, 0],
+                    duration: 200,
+                    easing: 'easeInOutSine'
+                });
+            }
+            
+            // Trigger faster cluster pattern change
+            if (typeof cycleClusterPattern === 'function') {
+                // Clear any existing intervals
+                if (nodePulseInterval) {
+                    clearTimeout(nodePulseInterval);
+                }
+                // Force immediate pattern change
+                setTimeout(() => {
+                    cycleClusterPattern();
+                }, 100);
+            }
+        }
+
+        // Initialize everything when DOM is fully loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(forceReRender, 100);
+                setTimeout(forceReRender, 500);
+            });
+        } else {
+            setTimeout(forceReRender, 100);
+            setTimeout(forceReRender, 500);
+        }
+
+        // Also force re-render on window load (for Vercel)
+        window.addEventListener('load', () => {
+            setTimeout(forceReRender, 200);
+            setTimeout(forceReRender, 800);
+        });
+
+        // Force re-render on page visibility change (for browser caching)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                setTimeout(forceReRender, 100);
             }
         });
     </script>
