@@ -134,16 +134,16 @@
         <div class="glitch-container opacity-60" style="filter: url(#glitch-filter)">
             <svg id="dedsec-logo" width="300" height="300" viewBox="10 10 80 90">
                 
-                <!-- V Letter -->
+                 <!-- V Letter - Main Red Logo -->
                 <path id="logo-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
 
-                <!-- W Letter -->
+                <!-- W Letter - Main Red Logo -->
                 <path id="logo-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
 
-                <!-- High Frequency Glitch Layers -->
-                <g id="glitch-layers" opacity="0.6">
-                    <path id="ghost-cyan-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--neon-cyan)" stroke-width="0.3" />
-                    <path id="ghost-green-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-green)" stroke-width="0.3" />
+                <!-- High Frequency Glitch Layers - Calibrated to match V and W -->
+                <g id="glitch-layers" opacity="0.5">
+                    <path id="ghost-cyan-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--neon-cyan)" stroke-width="0.4" opacity="0.6"/>
+                    <path id="ghost-green-w" d="M25 35 V 70 L 50 45 L 75 70 V 35" fill="none" stroke="var(--neon-green)" stroke-width="0.4" opacity="0.6"/>
                 </g>
             </svg>
         </div>
@@ -302,56 +302,68 @@
         }
         typeHead();
 
-        // --- 3. Chaotic Glitch Animation ---
+         // --- 3. Chaotic Glitch Animation ---
         const dispMap = document.getElementById('displacement-map');
         const logoWrapper = document.getElementById('logo-wrapper');
+        const logoV = document.getElementById('logo-v');
+        const logoW = document.getElementById('logo-w');
         const ghostV = document.getElementById('ghost-cyan-v');
         const ghostW = document.getElementById('ghost-green-w');
         
         function glitchLoop() {
             const timeline = anime.timeline({
                 easing: 'steps(2)', 
-                complete: () => setTimeout(glitchLoop, anime.random(1000, 4000))
+                complete: () => setTimeout(glitchLoop, anime.random(2000, 5000))
             });
 
             timeline
             .add({
                 targets: dispMap,
-                scale: [0, 40, 0, 20, 0],
-                duration: 400
+                scale: [0, 25, 0, 15, 0],
+                duration: 300
             })
             .add({
                 targets: '#dedsec-logo',
-                opacity: [0.6, 0, 0.8, 0, 0.6], 
-                duration: 300,
+                opacity: [0.6, 0.95, 0.4, 0.95, 0.6], 
+                duration: 200,
                 offset: 0
             })
             .add({
                 targets: logoWrapper,
                 translateX: [
-                    { value: () => anime.random(-100, 100), duration: 50 },
-                    { value: () => anime.random(-200, 200), duration: 50 },
-                    { value: 0, duration: 50 }
+                    { value: () => anime.random(-60, 60), duration: 40 },
+                    { value: () => anime.random(-30, 30), duration: 40 },
+                    { value: 0, duration: 40 }
                 ],
                 translateY: [
-                    { value: () => anime.random(-50, 50), duration: 50 },
-                    { value: () => anime.random(-100, 100), duration: 50 },
-                    { value: 0, duration: 50 }
+                    { value: () => anime.random(-30, 30), duration: 40 },
+                    { value: () => anime.random(-20, 20), duration: 40 },
+                    { value: 0, duration: 40 }
                 ],
                 offset: 0
             })
             .add({
                 targets: [ghostV, ghostW],
                 stroke: [
-                    { value: '#00f2ff', duration: 100 }, 
-                    { value: '#39ff14', duration: 100 }, 
-                    { value: '#ff0033', duration: 100 }, 
-                    { value: '#00f2ff', duration: 100 }  
+                    { value: '#ff0033', duration: 80 },
+                    { value: '#00f2ff', duration: 80 },
+                    { value: '#ff0033', duration: 80 }
                 ],
-                opacity: [0.9, 0],
-                translateX: () => anime.random(-20, 20),
-                translateY: () => anime.random(-10, 10),
-                duration: 400,
+                opacity: [0.5, 0.8, 0.3, 0.6, 0],
+                translateX: () => anime.random(-15, 15),
+                translateY: () => anime.random(-8, 8),
+                duration: 300,
+                offset: 0
+            })
+            .add({
+                targets: [logoV, logoW],
+                stroke: [
+                    { value: '#ff0033', duration: 1 },
+                    { value: '#ff3366', duration: 60 },
+                    { value: '#ff0033', duration: 60 }
+                ],
+                opacity: [1, 0.8, 1],
+                duration: 120,
                 offset: 0
             });
         }
