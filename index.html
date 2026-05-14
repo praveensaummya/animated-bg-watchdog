@@ -765,37 +765,37 @@
                showFrame(currentFrame);
            }
 
-           function showSkullSequence() {
-               // Random position anywhere on screen
-               const randomX = Math.random() * 90 + 5; // 5% to 95% from left
-               const randomY = Math.random() * 90 + 5; // 5% to 95% from top
-               skullContainer.style.left = randomX + '%';
-               skullContainer.style.top = randomY + '%';
-               skullContainer.style.transform = 'translate(-50%, -50%)';
-               skullContainer.className = 'skull-container active';
+function showSkullSequence() {
+                // Random position anywhere on screen
+                const randomX = Math.random() * 90 + 5; // 5% to 95% from left
+                const randomY = Math.random() * 90 + 5; // 5% to 95% from top
+                skullContainer.style.left = randomX + '%';
+                skullContainer.style.top = randomY + '%';
+                skullContainer.style.transform = 'translate(-50%, -50%)';
+                skullContainer.className = 'skull-container active';
 
-               showFrame(0);
+                showFrame(0);
 
-               // Pop in and out animation
-               anime({
-                   targets: skullContainer,
-                   scale: [0, 1, 1, 0],
-                   opacity: [0, 1, 1, 0],
-                   duration: 1500,
-                   easing: 'easeInOutQuad',
-                   complete: () => {
-                       skullContainer.classList.remove('active');
-                   }
-               });
+                // Pop in and out animation - longer duration
+                anime({
+                    targets: skullContainer,
+                    scale: [0, 1.2, 1, 0],
+                    opacity: [0, 1, 1, 0],
+                    duration: 3000,
+                    easing: 'easeInOutQuad',
+                    complete: () => {
+                        skullContainer.classList.remove('active');
+                    }
+                });
 
-               // Animate mouth by cycling frames
-               frameInterval = setInterval(animateMouth, 300);
+                // Animate mouth by cycling frames
+                frameInterval = setInterval(animateMouth, 400);
 
-               setTimeout(() => {
-                   clearInterval(frameInterval);
-                   hideSkullSequence();
-               }, 1500);
-           }
+                setTimeout(() => {
+                    clearInterval(frameInterval);
+                    hideSkullSequence();
+                }, 3000);
+            }
 
            function hideSkullSequence() {
                skullContainer.style.opacity = '0';
