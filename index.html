@@ -6,203 +6,251 @@
     <title>DEDSEC // ROUGER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
-        
-        :root {
-            --neon-cyan: #00f2ff;
-            --neon-pink: #ff00ff;
-            --neon-green: #39ff14;
-            --dedsec-red: #ff0033;
-            --bg-dark: #020202;
-        }
+<style>
+         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-dark);
-            color: var(--neon-cyan);
-            font-family: 'IBM Plex Mono', monospace;
-            overflow: hidden;
-            height: 100vh;
-            user-select: none;
-        }
+         :root {
+             --neon-cyan: #00f2ff;
+             --neon-pink: #ff00ff;
+             --neon-green: #39ff14;
+             --dedsec-red: #ff0033;
+             --bg-dark: #020202;
+         }
 
-        /* CRT/Scanline Overlays */
-        .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(
-                rgba(18, 16, 16, 0) 50%, 
-                rgba(0, 0, 0, 0.15) 50%), 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04)
-            );
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-            z-index: 100;
-            opacity: 0.6;
-        }
+         body {
+             margin: 0;
+             padding: 0;
+             background-color: var(--bg-dark);
+             color: var(--neon-cyan);
+             font-family: 'IBM Plex Mono', monospace;
+             overflow: hidden;
+             height: 100vh;
+             user-select: none;
+         }
 
-         /* PCB Circuit Styles */
-        .circuit {
-            fill: none;
-            stroke-width: 1.2;
-            stroke-linecap: square;
-            stroke-linejoin: miter;
-            filter: drop-shadow(0 0 3px var(--neon-cyan));
-            opacity: 0.12;
-        }
+         /* CRT/Scanline Overlays */
+         .scanlines {
+             position: fixed;
+             top: 0; left: 0; width: 100%; height: 100%;
+             background: linear-gradient(
+                 rgba(18, 16, 16, 0) 50%,
+                 rgba(0, 0, 0, 0.15) 50%),
+                 linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04)
+             );
+             background-size: 100% 4px, 3px 100%;
+             pointer-events: none;
+             z-index: 2;
+             opacity: 0.6;
+         }
 
-        .circuit-pink {
-            stroke: var(--neon-pink);
-            filter: drop-shadow(0 0 3px var(--neon-pink));
-        }
+          /* PCB Circuit Styles */
+         .circuit {
+             fill: none;
+             stroke-width: 1.2;
+             stroke-linecap: square;
+             stroke-linejoin: miter;
+             filter: drop-shadow(0 0 3px var(--neon-cyan));
+             opacity: 0.12;
+         }
 
-        .solder-point {
-            stroke-width: 1;
-            fill: none;
-            opacity: 0.2;
-        }
+         .circuit-pink {
+             stroke: var(--neon-pink);
+             filter: drop-shadow(0 0 3px var(--neon-pink));
+         }
 
-        /* Flickering Animation */
-        @keyframes flicker {
-            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
-            20%, 24%, 55% { opacity: 0.3; }
-        }
+         .solder-point {
+             stroke-width: 1;
+             fill: none;
+             opacity: 0.2;
+         }
 
-        .flicker {
-            animation: flicker 6s infinite;
-        }
+         /* Flickering Animation */
+         @keyframes flicker {
+             0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+             20%, 24%, 55% { opacity: 0.3; }
+         }
 
-        /* Background Grid */
-        .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(circle, #111 1px, transparent 1px);
-            background-size: 30px 30px;
-            z-index: -1;
-        }
+         .flicker {
+             animation: flicker 6s infinite;
+         }
 
-         .glitch-container {
-            position: relative;
-            transform-style: preserve-3d;
-        }
-
-         /* Network Nodes - Background Layer */
-         .network-nodes-bg {
+         /* Background Grid */
+         .bg-grid {
              position: fixed;
              inset: 0;
-             width: 100%;
-             height: 100%;
-             z-index: 0;
-             pointer-events: none;
+             background-image: radial-gradient(circle, #111 1px, transparent 1px);
+             background-size: 30px 30px;
+             z-index: -1;
          }
-         
-         .node {
-             fill: var(--neon-cyan);
-             opacity: 0.15;
-         }
-         
-         .connection-line {
-             stroke: var(--neon-cyan);
-             stroke-width: 0.5;
-             opacity: 0.05;
-         }
-         
-         /* Logo - Foreground Layer */
-         .logo-foreground {
+
+          .glitch-container {
+             position: relative;
+             transform-style: preserve-3d;
+          }
+
+/* Skull Animation - Spawns random, falls like bomb */
+          .skull-container {
+              position: fixed;
+              pointer-events: none;
+              z-index: 5;
+              opacity: 0;
+              visibility: hidden;
+              transition: opacity 0.6s ease, visibility 0.2s ease;
+          }
+
+          .skull-container.active {
+              opacity: 1;
+              visibility: visible;
+          }
+
+.skull-frame {
+              font-family: 'IBM Plex Mono', monospace;
+              font-size: clamp(4px, 0.5vw, 7px);
+              line-height: 0.92;
+              color: #fff;
+              white-space: pre;
+              text-align: center;
+              opacity: 0.5;
+              transform: translateZ(0);
+              letter-spacing: -0.02em;
+              max-width: 30vw;
+              overflow-wrap: normal;
+              white-space: pre-wrap;
+          }
+
+.network-nodes-bg {
+               position: fixed;
+              inset: 0;
+              width: 100%;
+              height: 100%;
+              z-index: 1;
+              pointer-events: none;
+          }
+
+          .node {
+              fill: var(--neon-cyan);
+              opacity: 0.15;
+          }
+
+          .connection-line {
+              stroke: var(--neon-cyan);
+              stroke-width: 0.5;
+              opacity: 0.05;
+          }
+
+/* Logo - Foreground Layer, centered with flex */
+           .logo-foreground {
+               position: fixed;
+               inset: 0;
+               z-index: 10;
+               pointer-events: none;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+           }
+
+         /* Sudo Header - Top Left */
+         .sudo-header {
              position: fixed;
-             inset: 0;
-             width: 100%;
-             height: 100%;
-             z-index: 10;
+             top: 20px;
+             left: 20px;
+             z-index: 20;
              pointer-events: none;
+             font-family: 'IBM Plex Mono', monospace;
+             font-size: 12px;
+             color: var(--neon-cyan);
+             opacity: 0.7;
+         }
+
+         /* Encryption Bar */
+         .encryption-bar {
+             position: fixed;
+             bottom: 80px;
+             left: 50%;
+             transform: translateX(-50%);
              display: flex;
-             align-items: center;
-             justify-content: center;
+             gap: 2px;
+             z-index: 50;
+             pointer-events: none;
+             opacity: 0.4;
          }
 
-        /* Encryption Bar */
-        .encryption-bar {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 2px;
-            z-index: 50;
-            pointer-events: none;
-            opacity: 0.4;
-        }
+         .encryption-block {
+             width: 4px;
+             height: 20px;
+             background: var(--neon-cyan);
+             opacity: 0.3;
+         }
 
-        .encryption-block {
-            width: 4px;
-            height: 20px;
-            background: var(--neon-cyan);
-            opacity: 0.3;
-        }
+         @keyframes encryptFlash {
+             0%, 100% { opacity: 0.3; }
+             50% { opacity: 1; }
+         }
 
-        @keyframes encryptFlash {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
+         /* Firewall Status */
+         .firewall-status {
+             position: fixed;
+             top: 50%;
+             right: 20px;
+             transform: translateY(-50%);
+             font-family: 'IBM Plex Mono', monospace;
+             font-size: 10px;
+             color: var(--neon-green);
+             opacity: 0.3;
+             z-index: 50;
+             pointer-events: none;
+             writing-mode: vertical-rl;
+             text-orientation: mixed;
+         }
 
-        /* Firewall Status */
-        .firewall-status {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px;
-            color: var(--neon-green);
-            opacity: 0.3;
-            z-index: 50;
-            pointer-events: none;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-        }
+         /* Packet Flow */
+         .packet {
+             position: absolute;
+             width: 3px;
+             height: 3px;
+             background: var(--neon-pink);
+             border-radius: 50%;
+             box-shadow: 0 0 6px var(--neon-pink);
+             opacity: 0;
+             pointer-events: none;
+             z-index: 3;
+         }
 
-        /* Packet Flow */
-        .packet {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: var(--neon-pink);
-            border-radius: 50%;
-            box-shadow: 0 0 6px var(--neon-pink);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        @keyframes packetFlow {
-            0% {
-                opacity: 0;
-                transform: scale(0);
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: scale(1);
-            }
-        }
-    </style>
+         @keyframes packetFlow {
+             0% {
+                 opacity: 0;
+                 transform: scale(0);
+             }
+             50% {
+                 opacity: 1;
+             }
+             100% {
+                 opacity: 0;
+                 transform: scale(1);
+             }
+         }
+     </style>
 </head>
 <body>
 
-    <div class="scanlines"></div>
-    <div class="bg-grid"></div>
+     <div class="scanlines"></div>
+     <div class="bg-grid"></div>
 
-     <!-- Network Nodes Layer - Background -->
+     <!-- Network Nodes Layer - Background (z-index: 1) -->
      <svg id="network-layer" class="network-nodes-bg"></svg>
 
-     <!-- Main Logo Wrapper - Foreground -->
+     <!-- Sudo Header - Top Left, completely separate from skull -->
+     <div class="sudo-header" id="sudo-header">
+         <span class="text-white/70 mr-1 lowercase">rouger :~ $</span>
+         <span id="typewriter-top" class="text-cyan-400/60 lowercase font-light"></span>
+         <span class="w-1.5 h-3.5 bg-cyan-400/40 animate-pulse ml-1 align-middle"></span>
+     </div>
+
+<!-- Main Logo Wrapper - Foreground -->
      <div class="logo-foreground">
-         <div class="glitch-container opacity-60" style="filter: url(#glitch-filter)">
-             <svg id="dedsec-logo" width="300" height="300" viewBox="10 10 80 90">
-                
+         <div class="glitch-container">
+             <svg id="dedsec-logo" width="250" height="250" viewBox="10 10 80 90">
+
                  <!-- V Letter - Main Red Logo -->
                 <path id="logo-v" d="M25 35 L50 80 L75 35" fill="none" stroke="var(--dedsec-red)" stroke-width="1.2" stroke-linejoin="miter" stroke-linecap="square" />
 
@@ -218,70 +266,146 @@
         </div>
      </div>
 
-    <!-- Header Stats -->
-    <header class="fixed top-0 left-0 w-full p-6 z-20 flex justify-between items-start pointer-events-none">
-        <div class="bg-black/30 p-3 border-l-2 border-cyan-500/10 backdrop-blur-sm opacity-40">
-            <div class="text-xs font-bold mb-1 flex items-center">
-                <span class="text-white/70 mr-2 lowercase font-normal">rouger :~ $</span>
-                <span id="typewriter-top" class="text-cyan-400/60 lowercase font-light"></span>
-                <span class="w-1.5 h-3.5 bg-cyan-400/40 animate-pulse ml-1"></span>
-            </div>
-            <div class="text-[9px] opacity-20 uppercase tracking-[0.2em] font-light">dedsec_network_override :: active</div>
-        </div>
-        
-        <div class="flicker opacity-30">
-            <svg width="45" height="45" viewBox="0 0 100 100" class="fill-cyan-400">
-                <path d="M50 5 L90 45 L50 85 L10 45 Z" fill="none" stroke="currentColor" stroke-width="1"/>
-                <path d="M50 15 L80 45 L50 75 L20 45 Z" />
-                <rect x="48" y="43" width="4" height="4" fill="white" />
-            </svg>
-        </div>
-    </header>
+     <!-- Skull Animation - Bottom corners, separate layer -->
+     <div id="skull-container" class="skull-container">
+         <div class="skull-frame" id="skull-frame-0">
+                               ███████████
+                            █████████████████
+                          █████████████████████
+                █  █  █      █████████████████████
+                         █████████████████████████
+                       ████████████████████████████
+                █  ████      ██████████████████████
+                        ▒██████████████████████████
+                            ████  █████       ████
+                       ███         ███         ███
+                █  █   █           ███         █
+                       █          ██  █        ███
+                          █████████   █████████████
+                 ███  ████   ██████     ██████████
+                          ███   ███  █  ████████
+                               ████  █  ███
+                               █████████████  ██
+                         ██    █  █  █  █  █  ██
+                          █                   ██
+                          █    █  █  █  █  █  █
+                            █ ███████████████
+                             ███████████████
+                               ███████████
+         </div>
+         <div class="skull-frame" id="skull-frame-1">
+                               ███████████
+                            █████████████████
+                          █████████████████████
+         █  █    █       █████████████████████
+                         █████████████████████████
+                       ████████████████████████████
+             █  ██  ██        ██████████████████████
+                        ▒██████████████████████████
+                            ████  █████       ████
+                       ███         ███         ███
+              █ █    █           ███         █
+                       █          ██  █        ███
+                          █████████   █████████████
+                 ██  █  ████   ██████     ██████████
+                          ███   ███  █  ████████
+                               ████  █  ███
+                               █████████████  ██
+                         ██    █  █  █  █  █  ██
 
-    <!-- Bottom Stat Bar -->
-    <footer class="fixed bottom-0 left-0 w-full p-6 z-50 flex justify-between items-end pointer-events-none">
-        <div class="text-[10px] space-y-1 opacity-20 font-light">
-            <div>IP_TRACE: <span class="text-pink-600">failed</span></div>
-            <div>UPLINK: <span class="text-cyan-600">stable</span></div>
-            <div class="text-[8px] opacity-10 uppercase tracking-widest">© dedsec // all rights exposed</div>
-        </div>
+                          █                   ██
+                          █    █  █  █  █  █  █
+                            █ ███████████████
+                             ███████████████
+                               ███████████
+         </div>
+         <div class="skull-frame" id="skull-frame-2">
+                               ███████████
+                            █████████████████
+                          █████████████████████
+                █  █   █      █████████████████████
+                         █████████████████████████
+                       ████████████████████████████
+             █  ██  ██       ██████████████████████
+                        ▒██████████████████████████
+                            ████  █████       ████
+                       ███         ███         ███
+              █  █    █           ███         █
+                       █          ██  █        ███
+                          █████████   █████████████
+                 ███  ████   ██████     ██████████
+                          ███   ███  █  ████████
+                               ████  █  ███
+                               █████████████  ██
+                         ██    █  █  █  █  █  ██
+                          █                   ██
+                          █    █  █  █  █  █  █
+                            █ ███████████████
+                             ███████████████
+                               ███████████
+         </div>
+     </div>
 
-        <div class="flicker opacity-15" style="animation-delay: 2s;">
-            <svg width="35" height="35" viewBox="0 0 100 100" class="fill-pink-500">
-                 <path d="M50 10 L90 50 L50 90 L10 50 Z" />
-            </svg>
-        </div>
-    </footer>
+     <!-- Header Stats Bar - Top Right (independent from skull) -->
+     <header class="fixed top-0 right-0 p-6 z-20 pointer-events-none">
+         <div class="bg-black/30 p-3 border-l-2 border-cyan-500/10 backdrop-blur-sm opacity-40">
+             <div class="text-[9px] opacity-20 uppercase tracking-[0.2em] font-light">dedsec_network_override :: active</div>
+         </div>
+     </header>
+
+     <!-- Top Right Flicker Icon -->
+     <div class="fixed top-4 right-4 z-20 flicker opacity-30 pointer-events-none">
+         <svg width="45" height="45" viewBox="0 0 100 100" class="fill-cyan-400">
+             <path d="M50 5 L90 45 L50 85 L10 45 Z" fill="none" stroke="currentColor" stroke-width="1"/>
+             <path d="M50 15 L80 45 L50 75 L20 45 Z" />
+             <rect x="48" y="43" width="4" height="4" fill="white" />
+         </svg>
+     </div>
+
+     <!-- Bottom Stat Bar -->
+     <footer class="fixed bottom-0 left-0 w-full p-6 z-50 flex justify-between items-end pointer-events-none">
+         <div class="text-[10px] space-y-1 opacity-20 font-light">
+             <div>IP_TRACE: <span class="text-pink-600">failed</span></div>
+             <div>UPLINK: <span class="text-cyan-600">stable</span></div>
+             <div class="text-[8px] opacity-10 uppercase tracking-widest">© dedsec // all rights exposed</div>
+         </div>
+
+         <div class="flicker opacity-15" style="animation-delay: 2s;">
+             <svg width="35" height="35" viewBox="0 0 100 100" class="fill-pink-500">
+                  <path d="M50 10 L90 50 L50 90 L10 50 Z" />
+             </svg>
+         </div>
+     </footer>
 
     <script>
 
 
-        // --- 2. Header Typewriter ---
+// --- 2. Sudo Header Typewriter ---
          const headText = "sudo wrench_protocol --execute --bypass-firewall";
-        const headEl = document.getElementById('typewriter-top');
-        let headIdx = 0;
-        function typeHead() {
-            if (headIdx < headText.length) {
-                headEl.textContent += headText.charAt(headIdx);
-                headIdx++;
-                setTimeout(typeHead, 80);
-            } else {
-                setTimeout(() => { headEl.textContent = ""; headIdx = 0; typeHead(); }, 8000);
-            }
-        }
-        typeHead();
+         const headEl = document.getElementById('typewriter-top');
+         let headIdx = 0;
+         function typeHead() {
+             if (headIdx < headText.length) {
+                 headEl.textContent += headText.charAt(headIdx);
+                 headIdx++;
+                 setTimeout(typeHead, 80);
+             } else {
+                 setTimeout(() => { headEl.textContent = ""; headIdx = 0; typeHead(); }, 8000);
+             }
+         }
+         typeHead();
 
-         // --- 3. Chaotic Glitch Animation ---
+// --- 3. Chaotic Glitch Animation ---
         const dispMap = document.getElementById('displacement-map');
-        const logoWrapper = document.querySelector('.logo-foreground');
+        const logoWrapper = document.querySelector('.glitch-container');
         const logoV = document.getElementById('logo-v');
         const logoW = document.getElementById('logo-w');
         const ghostV = document.getElementById('ghost-cyan-v');
         const ghostW = document.getElementById('ghost-green-w');
-        
+
          function glitchLoop() {
             const timeline = anime.timeline({
-                easing: 'steps(2)', 
+                easing: 'steps(2)',
                 complete: () => setTimeout(glitchLoop, anime.random(2000, 5000))
             });
 
@@ -293,7 +417,7 @@
             })
             .add({
                 targets: '#dedsec-logo',
-                opacity: [0.6, 0.95, 0.4, 0.95, 0.6], 
+                opacity: [0.6, 0.95, 0.4, 0.95, 0.6],
                 duration: 200,
                 offset: 0
             })
@@ -336,9 +460,9 @@
                 offset: 0
             });
         }
-        
-        // Start glitch loop with random initial delay to prevent pattern caching
-        setTimeout(glitchLoop, Math.random() * 1000 + 200);
+
+         // Start glitch loop with random initial delay to prevent pattern caching
+         setTimeout(glitchLoop, Math.random() * 1000 + 200);
 
          // --- 5. Network Nodes Visualization ---
          const networkLayer = document.getElementById('network-layer');
@@ -462,10 +586,13 @@
              cycleClusterPattern();
          }, 3500);
 
-        // --- 7. Threat Detection Radar ---
-        const threatRadar = document.getElementById('threat-radar');
-        
-        function createRadarSweep() {
+// --- 7. Threat Detection Radar ---
+         const threatRadar = document.createElement('div');
+         threatRadar.id = 'threat-radar';
+         threatRadar.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:4;';
+         document.body.appendChild(threatRadar);
+
+         function createRadarSweep() {
             const sweep = document.createElement('div');
             sweep.className = 'radar-sweep';
             sweep.style.left = '50%';
@@ -621,50 +748,115 @@
         
          createSystemStatus();
 
-         // --- 13. Interactive Parallax ---
+// --- Skull Overlay Animation - Pops at random screen positions ---
+           const skullContainer = document.getElementById('skull-container');
+           const skullFrames = document.querySelectorAll('.skull-frame');
+           let currentFrame = 0;
+           let frameInterval = null;
+
+           function showFrame(frameIndex) {
+               skullFrames.forEach((frame, index) => {
+                   frame.style.display = index === frameIndex ? 'block' : 'none';
+               });
+           }
+
+           function animateMouth() {
+               currentFrame = (currentFrame + 1) % skullFrames.length;
+               showFrame(currentFrame);
+           }
+
+           function showSkullSequence() {
+               // Random position anywhere on screen
+               const randomX = Math.random() * 90 + 5; // 5% to 95% from left
+               const randomY = Math.random() * 90 + 5; // 5% to 95% from top
+               skullContainer.style.left = randomX + '%';
+               skullContainer.style.top = randomY + '%';
+               skullContainer.style.transform = 'translate(-50%, -50%)';
+               skullContainer.className = 'skull-container active';
+
+               showFrame(0);
+
+               // Pop in and out animation
+               anime({
+                   targets: skullContainer,
+                   scale: [0, 1, 1, 0],
+                   opacity: [0, 1, 1, 0],
+                   duration: 1500,
+                   easing: 'easeInOutQuad',
+                   complete: () => {
+                       skullContainer.classList.remove('active');
+                   }
+               });
+
+               // Animate mouth by cycling frames
+               frameInterval = setInterval(animateMouth, 300);
+
+               setTimeout(() => {
+                   clearInterval(frameInterval);
+                   hideSkullSequence();
+               }, 1500);
+           }
+
+           function hideSkullSequence() {
+               skullContainer.style.opacity = '0';
+               skullContainer.style.visibility = 'hidden';
+               skullContainer.classList.remove('active');
+           }
+
+           function scheduleSkull() {
+               const delay = 3000 + Math.random() * 7000;
+               setTimeout(() => {
+                   showSkullSequence();
+                   scheduleSkull();
+               }, delay);
+           }
+
+           scheduleSkull();
+
+// --- 13. Interactive Parallax (VM Logo only) ---
          document.addEventListener('mousemove', (e) => {
             const moveX = (e.clientX / window.innerWidth - 0.5) * 8;
             const moveY = (e.clientY / window.innerHeight - 0.5) * 8;
-            const logo = document.getElementById('dedsec-logo');
-            if(logo) {
-                logo.parentElement.style.transform = `translate(${moveX * -0.2}px, ${moveY * -0.2}px) rotateX(${moveY * 0.1}deg) rotateY(${moveX * -0.1}deg)`;
+            const logoWrapper = document.querySelector('.logo-foreground');
+            if(logoWrapper) {
+                logoWrapper.style.transform = `translate(${moveX * -0.2}px, ${moveY * -0.2}px) rotateX(${moveY * 0.1}deg) rotateY(${moveX * -0.1}deg)`;
             }
         });
 
-        // --- 14. Force Re-render on Page Load (Fix for Vercel SSR caching) ---
+// --- 14. Force Re-render on Page Load (Fix for Vercel SSR caching) ---
         function forceReRender() {
             // Force glitch loop to restart with new random values
-            const logoWrapper = document.querySelector('.logo-foreground');
+            const logoWrapper = document.querySelector('.glitch-container');
             if (logoWrapper) {
                 logoWrapper.style.opacity = '0.59';
                 setTimeout(() => {
-                    logoWrapper.style.opacity = '0.6';
+                    logoWrapper.style.opacity = '1';
                 }, 50);
             }
 
-            // Force a glitch effect immediately
-            const dispMap = document.getElementById('displacement-map');
-            if (dispMap) {
-                anime({
-                    targets: dispMap,
-                    scale: [0, 30, 0],
-                    duration: 200,
-                    easing: 'easeInOutSine'
-                });
-            }
-            
-            // Trigger faster cluster pattern change
-            if (typeof cycleClusterPattern === 'function') {
-                // Clear any existing intervals
-                if (nodePulseInterval) {
-                    clearTimeout(nodePulseInterval);
-                }
-                // Force immediate pattern change
-                setTimeout(() => {
-                    cycleClusterPattern();
-                }, 100);
-            }
-        }
+             // Force a glitch effect immediately
+             const dispMap = document.getElementById('displacement-map');
+             if (dispMap) {
+                 anime({
+                     targets: dispMap,
+                     scale: [0, 30, 0],
+                     duration: 200,
+                     easing: 'easeInOutSine'
+                 });
+             }
+
+             // Trigger faster cluster pattern change
+             if (typeof cycleClusterPattern === 'function') {
+                 // Clear any existing intervals
+                 if (nodePulseInterval) {
+                     clearTimeout(nodePulseInterval);
+                 }
+                 // Force immediate pattern change
+                 setTimeout(() => {
+                     cycleClusterPattern();
+                 }, 100);
+             }
+         }
 
         // Initialize everything when DOM is fully loaded
         if (document.readyState === 'loading') {
