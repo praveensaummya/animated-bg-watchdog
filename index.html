@@ -313,6 +313,7 @@
                                █████████████  ██
                          ██    █  █  █  █  █  ██
 
+                         
                           █                   ██
                           █    █  █  █  █  █  █
                             █ ███████████████
@@ -748,70 +749,148 @@
         
          createSystemStatus();
 
-// --- Skull Overlay Animation - Pops at random screen positions ---
-           const skullContainer = document.getElementById('skull-container');
-           const skullFrames = document.querySelectorAll('.skull-frame');
-           let currentFrame = 0;
-           let frameInterval = null;
+// --- 12. Skull Typewriter & Dissolve Remove Animation ---
+            const skullContainer = document.getElementById('skull-container');
+            const skullFrames = document.querySelectorAll('.skull-frame');
+            let currentFrame = 0;
+            let frameInterval = null;
+            let skullTypingTimeout = null;
+            let skullSequenceTimeout = null;
 
-           function showFrame(frameIndex) {
-               skullFrames.forEach((frame, index) => {
-                   frame.style.display = index === frameIndex ? 'block' : 'none';
-               });
-           }
-
-           function animateMouth() {
-               currentFrame = (currentFrame + 1) % skullFrames.length;
-               showFrame(currentFrame);
-           }
-
-function showSkullSequence() {
-                // Random position anywhere on screen
-                const randomX = Math.random() * 90 + 5; // 5% to 95% from left
-                const randomY = Math.random() * 90 + 5; // 5% to 95% from top
-                skullContainer.style.left = randomX + '%';
-                skullContainer.style.top = randomY + '%';
-                skullContainer.style.transform = 'translate(-50%, -50%)';
-                skullContainer.className = 'skull-container active';
-
-                showFrame(0);
-
-                // Pop in and out animation - longer duration
-                anime({
-                    targets: skullContainer,
-                    scale: [0, 1.2, 1, 0],
-                    opacity: [0, 1, 1, 0],
-                    duration: 3000,
-                    easing: 'easeInOutQuad',
-                    complete: () => {
-                        skullContainer.classList.remove('active');
-                    }
+            // Store original text in data attributes for reset
+            function prepareSkullFrames() {
+                skullFrames.forEach(frame => {
+                    if (frame.dataset.originalText !== undefined) return;
+                    frame.dataset.originalText = frame.textContent;
                 });
-
-                // Animate mouth by cycling frames
-                frameInterval = setInterval(animateMouth, 400);
-
-                setTimeout(() => {
-                    clearInterval(frameInterval);
-                    hideSkullSequence();
-                }, 3000);
             }
 
-           function hideSkullSequence() {
-               skullContainer.style.opacity = '0';
-               skullContainer.style.visibility = 'hidden';
-               skullContainer.classList.remove('active');
-           }
+            // Reset frame content from original, all spans hidden
+            function resetFrameContent(frame) {
+                const text = frame.dataset.originalText || frame.textContent;
+                const lines = text.split(/\n/);
+                frame.innerHTML = lines
+                    .map(line => `<span style="display:block;opacity:0">${line}</span>`)
+                    .join('');
+            }
 
-           function scheduleSkull() {
-               const delay = 3000 + Math.random() * 7000;
-               setTimeout(() => {
-                   showSkullSequence();
-                   scheduleSkull();
-               }, delay);
-           }
+            // Make all spans in a frame instantly visible
+            function showAllSpans(frame) {
+                frame.querySelectorAll('span').forEach(span => {
+                    span.style.opacity = '1';
+                    span.style.transition = 'none';
+                });
+            }
 
-           scheduleSkull();
+            function showFrame(frameIndex) {
+                skullFrames.forEach((frame, index) => {
+                    frame.style.display = index === frameIndex ? 'block' : 'none';
+                });
+            }
+
+            function animateMouth() {
+                const next = (currentFrame + 1) % skullFrames.length;
+                currentFrame = next;
+                showAllSpans(skullFrames[currentFrame]);
+                showFrame(currentFrame);
+            }
+
+            // Phase 1: Typewriter reveal — line by line
+            function typewriterReveal(frame, delay = 55) {
+                return new Promise(resolve => {
+                    const spans = frame.querySelectorAll('span');
+                    let i = 0;
+                    function showNext() {
+                        if (i >= spans.length) { resolve(); return; }
+                        spans[i].style.transition = 'opacity 0.12s ease';
+                        spans[i].style.opacity = '1';
+                        i++;
+                        skullTypingTimeout = setTimeout(showNext, delay);
+                    }
+                    showNext();
+                });
+            }
+
+            // Phase 3: Clean dissolve — lines disappear bottom-to-top
+            function dissolveRemove(frame) {
+                return new Promise(resolve => {
+                    const spans = frame.querySelectorAll('span');
+                    const ordered = Array.from(spans).reverse();
+                    ordered.forEach((span, i) => {
+                        skullTypingTimeout = setTimeout(() => {
+                            span.style.transition = 'opacity 0.18s ease';
+                            span.style.opacity = '0';
+                        }, i * 40);
+                    });
+                    skullSequenceTimeout = setTimeout(resolve, ordered.length * 40 + 250);
+                });
+            }
+
+            async function showSkullSequence() {
+                // Cancel any lingering animations
+                clearTimeout(skullTypingTimeout);
+                clearTimeout(skullSequenceTimeout);
+                clearInterval(frameInterval);
+
+                // Reset every frame to hidden spans
+                skullFrames.forEach(f => { f.style.display = 'none'; resetFrameContent(f); });
+
+                // Random position on screen
+                skullContainer.style.left = (Math.random() * 90 + 5) + '%';
+                skullContainer.style.top = (Math.random() * 90 + 5) + '%';
+                skullContainer.style.transform = 'translate(-50%,-50%)';
+                skullContainer.className = 'skull-container active';
+
+                currentFrame = 0;
+                showFrame(0);
+
+                // ① Typewriter — build the skull line by line
+                await typewriterReveal(skullFrames[0], 48);
+
+                // Brief hold
+                await new Promise(r => skullSequenceTimeout = setTimeout(r, 600));
+
+                // ② Mouth animation — cycle frames a few times
+                let m = 0;
+                await new Promise(resolve => {
+                    frameInterval = setInterval(() => {
+                        animateMouth();
+                        m++;
+                        if (m >= 12) {
+                            clearInterval(frameInterval);
+                            frameInterval = null;
+                            resolve();
+                        }
+                    }, 400);
+                });
+
+                // ③ Dissolve remove — lines fade bottom-to-top
+                await dissolveRemove(skullFrames[currentFrame]);
+
+                // Fade out container and reset
+                skullContainer.classList.remove('active');
+                skullSequenceTimeout = setTimeout(hideSkullSequence, 600);
+            }
+
+            function hideSkullSequence() {
+                skullContainer.style.opacity = '0';
+                skullContainer.style.visibility = 'hidden';
+                skullContainer.classList.remove('active');
+                clearTimeout(skullTypingTimeout);
+                clearTimeout(skullSequenceTimeout);
+                clearInterval(frameInterval);
+            }
+
+            function scheduleSkull() {
+                const delay = 1000 + Math.random() * 2000;
+                skullSequenceTimeout = setTimeout(async () => {
+                    await showSkullSequence();
+                    scheduleSkull();
+                }, delay);
+            }
+
+            prepareSkullFrames();
+            scheduleSkull();
 
 // --- 13. Interactive Parallax (VM Logo only) ---
          document.addEventListener('mousemove', (e) => {
